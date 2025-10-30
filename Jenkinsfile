@@ -47,7 +47,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 echo 'Deploying application to Kubernetes...'
-                sh '''
+                bat '''
                     kubectl delete deployment nodejs-app-deployment --ignore-not-found
                     kubectl delete service nodejs-app-service --ignore-not-found
                     kubectl apply -f deployment.yaml
