@@ -11,29 +11,29 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Installing dependencies...'
-                sh 'npm install'
+                bat 'npm install'
             }
         }
 
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                // If you have no tests yet, skip with true
-                sh 'npm test || true'
+                // Skip test errors gracefully
+                bat 'npm test || exit /b 0'
             }
         }
 
         stage('Package Docker Image') {
             steps {
                 echo 'Building Docker image...'
-                sh 'docker build -t nodejs-app .'
+                bat 'docker build -t nodejs-app .'
             }
         }
 
         stage('Run Docker Container') {
             steps {
                 echo 'Running Docker container...'
-                sh 'docker run -d -p 3000:3000 nodejs-app'
+                bat 'docker run -d -p 3000:3000 nodejs-app'
             }
         }
     }
@@ -47,3 +47,4 @@ pipeline {
         }
     }
 }
+
