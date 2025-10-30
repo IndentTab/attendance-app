@@ -41,6 +41,19 @@ pipeline {
                 '''
             }
         }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                echo 'Deploying application to Kubernetes...'
+                sh '''
+                    kubectl delete deployment nodejs-app-deployment --ignore-not-found
+                    kubectl delete service nodejs-app-service --ignore-not-found
+                    kubectl apply -f deployment.yaml
+                    kubectl apply -f service.yaml
+                    kubectl get pods
+                '''
+            }
+        }
     }
 
     post {
