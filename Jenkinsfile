@@ -32,11 +32,16 @@ pipeline {
 
         stage('Run Docker Container') {
             steps {
-                echo 'Running Docker container...'
-                bat 'docker run -d -p 3000:3000 nodejs-app'
+                bat '''
+                echo Cleaning up old containers...
+                for /f "delims=" %%i in ('docker ps -q --filter "ancestor=nodejs-app"') do docker stop %%i || echo none
+                for /f "delims=" %%i in ('docker ps -a -q --filter "ancestor=nodejs-app"') do docker rm %%i || echo none
+
+                echo Starting new container...
+                docker run -d -p 3000:3000 --name nodejs-app-%BUILD_NUMBER% nodejs-app
+                '''
+              }
             }
-        }
-    }
 
     post {
         success {
