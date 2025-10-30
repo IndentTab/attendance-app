@@ -18,7 +18,6 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                // Skip test errors gracefully
                 bat 'npm test || exit /b 0'
             }
         }
@@ -40,15 +39,16 @@ pipeline {
                 echo Starting new container...
                 docker run -d -p 3000:3000 --name nodejs-app-%BUILD_NUMBER% nodejs-app
                 '''
-              }
             }
+        }
+    }
 
     post {
-        success {
-            echo 'Build completed successfully!'
-        }
         failure {
             echo 'Build failed. Check logs.'
+        }
+        success {
+            echo 'Build completed successfully.'
         }
     }
 }
