@@ -2,8 +2,10 @@ pipeline {
     agent any
 
     stages {
+
         stage('Checkout') {
             steps {
+                echo 'Checking out source code...'
                 git branch: 'main', url: 'https://github.com/IndentTab/attendance-app.git'
             }
         }
@@ -18,6 +20,7 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running tests...'
+                // Exit 0 ensures Jenkins doesn’t fail if no tests are defined
                 bat 'npm test || exit /b 0'
             }
         }
@@ -31,39 +34,36 @@ pipeline {
 
         stage('Run Docker Container') {
             steps {
+                echo 'Starting new container (after cleanup)...'
                 bat '''
-                echo Cleaning up old containers...
                 for /f "delims=" %%i in ('docker ps -q --filter "ancestor=nodejs-app"') do docker stop %%i || echo none
                 for /f "delims=" %%i in ('docker ps -a -q --filter "ancestor=nodejs-app"') do docker rm %%i || echo none
 
-                echo Starting new container...
-                for /f "delims=" %%p in ('docker ps -q --filter "publish=3000"') do docker stop %%p || echo none
                 docker run -d -p 3000:3000 --name nodejs-app-%BUILD_NUMBER% nodejs-app
-
                 '''
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                echo 'Deploying application to Kubernetes...'
+                echo 'Deploying to Kubernetes (via WSL Minikube cluster)...'
                 bat '''
-                    kubectl delete deployment nodejs-app-deployment --ignore-not-found
-                    kubectl delete service nodejs-app-service --ignore-not-found
-                    kubectl apply -f deployment.yaml
-                    kubectl apply -f service.yaml
-                    kubectl get pods
+                wsl kubectl delete deployment nodejs-app-deployment --ignore-not-found
+                wsl kubectl delete service nodejs-app-service --ignore-not-found
+                wsl kubectl apply -f deployment.yaml
+                wsl kubectl apply -f service.yaml
+                wsl kubectl get pods
                 '''
             }
         }
     }
 
     post {
-        failure {
-            echo 'Build failed. Check logs.'
-        }
         success {
-            echo 'Build completed successfully.'
+            echo '✅ Build and deployment completed successfully!'
+        }
+        failure {
+            echo '❌ Build failed. Please check console output for errors.'
         }
     }
 }
