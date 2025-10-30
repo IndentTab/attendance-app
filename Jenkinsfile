@@ -37,7 +37,9 @@ pipeline {
                 for /f "delims=" %%i in ('docker ps -a -q --filter "ancestor=nodejs-app"') do docker rm %%i || echo none
 
                 echo Starting new container...
+                for /f "delims=" %%p in ('docker ps -q --filter "publish=3000"') do docker stop %%p || echo none
                 docker run -d -p 3000:3000 --name nodejs-app-%BUILD_NUMBER% nodejs-app
+
                 '''
             }
         }
